@@ -20,6 +20,13 @@ rpm_r = shared_res(1E-5)
 torque_r = shared_res(1E-5)
 test_time_r = shared_res(1E-5)
 
+#102917 make a shared res object for passing CAN data between
+#p_can_thread and data_log_thread
+can_data_r = shared_res(1E-5)
+
+#102917 Added a shared res object for checking if the data log switch is on
+data_log_st_r= shared_res(1E-5)
+
 #------------------------------------------------------------------------
 #   W E B S O C K E T   H A N D L E R
 #------------------------------------------------------------------------
@@ -53,11 +60,13 @@ if __name__ == '__main__':
     tpu_thread.start()
     
     # define and launch peripheral and CAN thread
-    p_can_thread = p_can_thread(115200, 50E-3, rpm_unfilt_q) # *****************REVIEW LATER with Pink*****************
+    #102917 passed in can_data_r to p_can_thread
+    p_can_thread = p_can_thread(115200, 50E-3, rpm_unfilt_q, can_data_r) # *****************REVIEW LATER with Pink*****************
     p_can_thread.start()
 
     # define and launch data log thread 
-    data_log_thread = data_log_thread(sample_freq, thread_update_time, rpm_r, torque_r, test_time_r)
+    #102917 passed in can_data_r to data_log_thread
+    data_log_thread = data_log_thread(sample_freq, thread_update_time, rpm_r, torque_r, test_time_r, can_data_r)
     data_log_thread.start()
 
     # define and launch dyno data filter thread (check 10 times faster than data log updates time, to ensure precise filter sampling)
