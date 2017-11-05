@@ -65,7 +65,7 @@ class data_log_thread(threading.Thread):
 
 					# write to CSV
 					#102917 Seconds since start + RPM + Torque + CAN
-					csv_writer.writerow([str(curr_test_time), rpm here, torque here] + can_data_r.get())
+					csv_writer.writerow([str(curr_test_time), str(rpm_res.get()), str(torque_res.get())] + can_data_r.get())
 
 				# store current test time so that data logging stores at correct rate
 				last_test_time = curr_test_time
