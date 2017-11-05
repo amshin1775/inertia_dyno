@@ -25,7 +25,10 @@ test_time_r = shared_res(1E-5)
 can_data_r = shared_res(1E-5)
 
 #102917 Added a shared res object for checking if the data log switch is on
-data_log_st_r= shared_res(1E-5)
+data_log_st_r= shared_res(1E-5, False)
+
+# 110517 Added a shared res object for checking if the killswitch was hit
+killswitch_r = shared_res(1E-5, False)
 
 #------------------------------------------------------------------------
 #   W E B S O C K E T   H A N D L E R
@@ -61,12 +64,13 @@ if __name__ == '__main__':
     
     # define and launch peripheral and CAN thread
     #102917 passed in can_data_r to p_can_thread
-    p_can_thread = p_can_thread(115200, 50E-3, rpm_unfilt_q, can_data_r) # *****************REVIEW LATER with Pink*****************
+    # 110517 passed in killswitch_r to p_can_thread
+    p_can_thread = p_can_thread(115200, 50E-3, rpm_unfilt_q, can_data_r, data_log_st_r, killswitch_r) # *****************REVIEW LATER with Pink*****************
     p_can_thread.start()
 
     # define and launch data log thread 
     #102917 passed in can_data_r to data_log_thread
-    data_log_thread = data_log_thread(sample_freq, thread_update_time, rpm_r, torque_r, test_time_r, can_data_r)
+    data_log_thread = data_log_thread(sample_freq, thread_update_time, rpm_r, torque_r, test_time_r, can_data_r, data_log_st_r)
     data_log_thread.start()
 
     # define and launch dyno data filter thread (check 10 times faster than data log updates time, to ensure precise filter sampling)
@@ -85,8 +89,3 @@ if __name__ == '__main__':
     except:
         print('\nTerminating asyncio loop.')
         loop.close()
-
-
-
-                    
-

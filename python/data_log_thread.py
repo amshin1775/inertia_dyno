@@ -2,7 +2,7 @@ import threading, time, csv, datetime
 
 class data_log_thread(threading.Thread):
 
-	def __init__(self, my_sample_freq, my_thread_timing, my_rpm_res, my_torque_res, my_test_time_res, my_can_data_res):
+	def __init__(self, my_sample_freq, my_thread_timing, my_rpm_res, my_torque_res, my_test_time_res, my_can_data_res, my_data_log_st_res):
 
 		super().__init__(name="data log thread")
 
@@ -19,6 +19,9 @@ class data_log_thread(threading.Thread):
 		#102917 Added parameter and field in order to use the can_data_r
 		#shared resource
 		self.can_data_r = my_can_data_res
+
+		#110517 Added parameter and field in order to use the data_log_st_r shared resource
+		self.data_log_st_r = my_data_log_st_res
 
 		# sleep the thread every 1 us, effectively updating the test time about that fast
 		self.thread_block_period = 1E-6 
@@ -38,6 +41,9 @@ class data_log_thread(threading.Thread):
 		#102917 Created csv_writer for use in writing to the data csv file
 		csv_writer = csv.writer(f)
 
+		# 110517 Added header to csv file
+		csv_writer.writerow(['Time Elapsed', 'RPM', 'Torque', 'Pulse Width?', 'Engine RPM', 'Engine Advance', 'Manifold Air Pressure', 'Manifold Air Temperature', 'Coolant Temperature', 'Throttle Position Sensor', 'Air-Fuel Ratio', 'Air Correction?', 'Warm Correction?', 'Throttle Acceleration', 'Total Correction?', 'tpsFuelCutId', 'coldAdvDegId', 'tpsDotId', 'mapDotId', 'rpmDotId'])
+
 		# time variables
 		init_test_time = time.time()
 		curr_test_time = 0
@@ -54,10 +60,13 @@ class data_log_thread(threading.Thread):
 			if curr_test_time - last_test_time > self.sample_freq:
 				# store data
 
-				# write to CSV
-				#102917 Seconds since start + RPM + Torque + CAN. Also need headers
+				# 110517 Added check for data_log_st_r to see if we need to log
+				if data_log_st_r.get() == True:
 
-				
+					# write to CSV
+					#102917 Seconds since start + RPM + Torque + CAN
+					csv_writer.writerow([str(curr_test_time), str(rpm_res.get()), str(torque_res.get())] + can_data_r.get())
+
 				# store current test time so that data logging stores at correct rate
 				last_test_time = curr_test_time
 

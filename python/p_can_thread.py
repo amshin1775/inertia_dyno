@@ -2,7 +2,7 @@ import threading, serial, glob, time, random
 
 class p_can_thread(threading.Thread):
 
-	def __init__(self, my_baud, my_ser_timeout, my_can_data_r): # *****************REVIEW LATER with Pink*****************
+	def __init__(self, my_baud, my_ser_timeout, my_can_data_r, my_data_log_st_r, my_killswitch_r): # *****************REVIEW LATER with Pink*****************
 
 		super().__init__(name="peripheral can thread")
 
@@ -17,6 +17,12 @@ class p_can_thread(threading.Thread):
 		#shared resource
 		self.can_data_r = my_can_data_r
 		
+		# 110517 Added parameter and field in order to use the data_log_st_r shared resource
+		self.data_log_st_r = my_data_log_st_r
+
+		# 110517 Added parameter and field in order to use the killswitch_r shared resource
+		self.killswitch_r = my_killswitch_r
+
 		# intialization of important variables
 		self.ser_port = None
 		self.handshake_wait_interval = 2 # seconds
@@ -73,6 +79,7 @@ class p_can_thread(threading.Thread):
 							self.ser_port.close()
 							self.ser_port = None
 
+
 			# only proceed if a serial port has been found
 			else:
 
@@ -81,11 +88,22 @@ class p_can_thread(threading.Thread):
 
 				# only continue if the serial port did not timeout and successfully read a line
 				if line_in != '':
-        
-         				# capture can message index and data from Arduino
-         				dataindex = int(line_in[0], 10)
+
+					# 110517 Change data_log_st_r based on if we start or stop logging
+					if line_in == 'STOP':
+						data_log_st_r.put(False)
+					elif line_in == 'START':
+						data_log_st_r.put(True)
+						line_in = self.ser_port.readline()[:-1].decode('ascii')
+
+					# 110517 Change killswitch_r based on if we kill the engine
+					elif line_in == 'KILL':
+						killswitch_r.put(True)
+
+					# capture can message index and data from Arduino
+					dataindex = int(line_in[0], 10)
 					temp_data = int(line_in[1:2].lower(), 16)	# 16 = number system base (hex)
-          				
+						
 					# If statements for different multipliers and adders
 					# Reference CAN MAP Document for which array index is for what data.
 					adder = 0  #Currently all can message data has an adder of 0
@@ -101,7 +119,8 @@ class p_can_thread(threading.Thread):
 						multiplier = 0
 					
 					# Apply CAN data multiplier and adder
-          				can_data[dataindex] = temp_data*multiplier+adder
+					# 110517 Added code to format can_data as string so we can write
+					can_data[dataindex] = str(temp_data * multiplier + adder)
 
 					print(dataindex, can_data[dataindex])
 					
@@ -110,7 +129,8 @@ class p_can_thread(threading.Thread):
 				else: 
 				# if the serial port timed-out before reading a line, assume current CAN data is 0
 					for x in range(17):
-						can_data[x] = 0
+						# 110517 changed from 0 to '0' so we can write
+						can_data[x] = '0'
 					continue
 				
 
