@@ -42,7 +42,7 @@ class data_log_thread(threading.Thread):
 		csv_writer = csv.writer(f)
 
 		# 110517 Added header to csv file
-		csv_writer.writerow(['Time Elapsed', 'RPM', 'Torque', 'Pulse Width?', 'Engine RPM', 'Engine Advance', 'Manifold Air Pressure', 'Manifold Air Temperature', 'Coolant Temperature', 'Throttle Position Sensor', 'Air-Fuel Ratio', 'Air Correction?', 'Warm Correction?', 'Throttle Acceleration', 'Total Correction?', 'tpsFuelCutId', 'coldAdvDegId', 'tpsDotId', 'mapDotId', 'rpmDotId'])
+		csv_writer.writerow(['Time Elapsed', 'Dyno RPM', 'Torque', 'Pulse Width?', 'Engine RPM', 'Engine Advance', 'Manifold Air Pressure', 'Manifold Air Temperature', 'Coolant Temperature', 'Throttle Position Sensor', 'Air-Fuel Ratio', 'Air Correction?', 'Warm Correction?', 'Throttle Acceleration', 'Total Correction?', 'tpsFuelCutId', 'coldAdvDegId', 'tpsDotId', 'mapDotId', 'rpmDotId'])
 
 		# time variables
 		init_test_time = time.time()
