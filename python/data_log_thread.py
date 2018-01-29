@@ -2,7 +2,7 @@ import threading, time, csv, datetime
 
 class data_log_thread(threading.Thread):
 
-	def __init__(self, my_sample_freq, my_thread_timing, my_rpm_res, my_torque_res, my_test_time_res, my_can_data_res, my_data_log_st_res):
+	def __init__(self, my_sample_freq, my_thread_timing, my_rpm_res, my_torque_res, my_test_time_res, my_can_data_res, my_data_log_st_res, my_killswitch_r):
 
 		super().__init__(name="data log thread")
 
@@ -15,13 +15,9 @@ class data_log_thread(threading.Thread):
 		self.test_time_res = my_test_time_res
 		self.rpm_res = my_rpm_res
 		self.torque_res = my_torque_res
-
-		#102917 Added parameter and field in order to use the can_data_r
-		#shared resource
 		self.can_data_r = my_can_data_res
-
-		#110517 Added parameter and field in order to use the data_log_st_r shared resource
 		self.data_log_st_r = my_data_log_st_res
+		self.killswitch_r = my_killswitch_r
 
 		# sleep the thread every 1 us, effectively updating the test time about that fast
 		self.thread_block_period = 1E-6 
@@ -35,13 +31,11 @@ class data_log_thread(threading.Thread):
 
 	def run(self):
 
-		#102917 Create a file with the format of YYYY-MM-DD HH-MM-SS.Ms
-		f = open(str(datetime.datetime.now()), 'w')
+		#Create a file with the format of YYYY-MM-DD HH-MM-SS.Ms in logs
+		f = open("logs/" + str(datetime.datetime.now()) + ".csv", 'w+')
 
-		#102917 Created csv_writer for use in writing to the data csv file
+		#Create csv_writer and add header
 		csv_writer = csv.writer(f)
-
-		# 110517 Added header to csv file
 		csv_writer.writerow(['Time Elapsed', 'Dyno RPM', 'Torque', 'Pulse Width?', 'Engine RPM', 'Engine Advance', 'Manifold Air Pressure', 'Manifold Air Temperature', 'Coolant Temperature', 'Throttle Position Sensor', 'Air-Fuel Ratio', 'Air Correction?', 'Warm Correction?', 'Throttle Acceleration', 'Total Correction?', 'tpsFuelCutId', 'coldAdvDegId', 'tpsDotId', 'mapDotId', 'rpmDotId'])
 
 		# time variables
@@ -60,11 +54,17 @@ class data_log_thread(threading.Thread):
 			if curr_test_time - last_test_time > self.sample_freq:
 				# store data
 
-				# 110517 Added check for data_log_st_r to see if we need to log
+				#If data_log switch is on
 				if data_log_st_r.get() == True:
 
+					#Killswitch handler (probably can use queue once we figure out what the heck it does)
+					kill_state = killswitch_r.get()
+					if  kill_state > 0 and kill_state < 3:
+						#Log kill message
+						csv_writer.writerow([str('%.3f' % curr_test_time), "Engine killed"])
+						killswitch_r.put(kill_state += 1)
+
 					# write to CSV
-					#102917 Seconds since start (cut to thousandths) + RPM + Torque + CAN
 					csv_writer.writerow([str('%.3f' % curr_test_time), str(rpm_res.get()), str(torque_res.get())] + can_data_r.get())
 
 				# store current test time so that data logging stores at correct rate

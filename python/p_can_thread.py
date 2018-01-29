@@ -89,16 +89,16 @@ class p_can_thread(threading.Thread):
 				# only continue if the serial port did not timeout and successfully read a line
 				if line_in != '':
 
-					# 110517 Change data_log_st_r based on if we start or stop logging
+					#Check for if data log switch is on
 					if line_in == 'STOP':
 						data_log_st_r.put(False)
 					elif line_in == 'START':
 						data_log_st_r.put(True)
 						line_in = self.ser_port.readline()[:-1].decode('ascii')
 
-					# 110517 Change killswitch_r based on if we kill the engine
+					#Check for if killswitch was pressed
 					elif line_in == 'KILL':
-						killswitch_r.put(True)
+						killswitch_r.put(1)
 
 					# capture can message index and data from Arduino
 					dataindex = int(line_in[0], 10)
@@ -107,19 +107,18 @@ class p_can_thread(threading.Thread):
 					# If statements for different multipliers and adders
 					# Reference CAN MAP Document for which array index is for what data.
 					adder = 0  #Currently all can message data has an adder of 0
-					if dataindex = 0:
+					if dataindex == 0:
 						multiplier = 0.001
-					elif dataindex = 1 or dataindex = 15:
+					elif dataindex == 1 or dataindex == 15:
 						multiplier = 1
 					elif (2 <= dataindex <= 14):
 						multiplier = 0.1
-					elif dataindex = 16:
+					elif dataindex == 16:
 						multiplier = 10
 					else:
 						multiplier = 0
 					
 					# Apply CAN data multiplier and adder
-					# 110517 Added code to format can_data as string so we can write
 					can_data[dataindex] = str(temp_data * multiplier + adder)
 
 					print(dataindex, can_data[dataindex])
@@ -129,7 +128,6 @@ class p_can_thread(threading.Thread):
 				else: 
 				# if the serial port timed-out before reading a line, assume current CAN data is 0
 					for x in range(17):
-						# 110517 changed from 0 to '0' so we can write
 						can_data[x] = '0'
 					continue
 				
