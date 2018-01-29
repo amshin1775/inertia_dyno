@@ -46,7 +46,7 @@ async def data_transmission(websocket, path):
 
 			#Killswitch handler (probably can use queue once we figure out what the heck it does)
 			kill_state = killswitch_r.get()
-				if  kill_state > 0 and kill_state < 3:
+			if  kill_state > 0 and kill_state < 3:
 				#Display kill message
 				#########fillertext#########
 				killswitch_r.put(kill_state += 1)
