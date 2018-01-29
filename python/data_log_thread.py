@@ -55,14 +55,14 @@ class data_log_thread(threading.Thread):
 				# store data
 
 				#If data_log switch is on
-				if data_log_st_r.get() == True:
+				if self.data_log_st_r.get() == True:
 
 					#Killswitch handler (probably can use queue once we figure out what the heck it does)
-					kill_state = killswitch_r.get()
+					kill_state = self.killswitch_r.get()
 					if  kill_state > 0 and kill_state < 3:
 						#Log kill message
 						csv_writer.writerow([str('%.3f' % curr_test_time), "Engine killed"])
-						killswitch_r.put(kill_state += 1)
+						self.killswitch_r.put(kill_state + 1)
 
 					# write to CSV
 					csv_writer.writerow([str('%.3f' % curr_test_time), str(rpm_res.get()), str(torque_res.get())] + can_data_r.get())

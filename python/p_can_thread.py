@@ -91,14 +91,14 @@ class p_can_thread(threading.Thread):
 
 					#Check for if data log switch is on
 					if line_in == 'STOP':
-						data_log_st_r.put(False)
+						self.data_log_st_r.put(False)
 					elif line_in == 'START':
-						data_log_st_r.put(True)
+						self.data_log_st_r.put(True)
 						line_in = self.ser_port.readline()[:-1].decode('ascii')
 
 					#Check for if killswitch was pressed
 					elif line_in == 'KILL':
-						killswitch_r.put(1)
+						self.killswitch_r.put(1)
 
 					# capture can message index and data from Arduino
 					dataindex = int(line_in[0], 10)
@@ -119,11 +119,11 @@ class p_can_thread(threading.Thread):
 						multiplier = 0
 					
 					# Apply CAN data multiplier and adder
-					can_data[dataindex] = str(temp_data * multiplier + adder)
+					self.can_data[dataindex] = str(temp_data * multiplier + adder)
 
 					print(dataindex, can_data[dataindex])
 					
-					can_data_r.put(can_data)
+					self.can_data_r.put(can_data)
 				
 				else: 
 				# if the serial port timed-out before reading a line, assume current CAN data is 0

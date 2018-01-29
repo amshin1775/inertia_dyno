@@ -49,7 +49,7 @@ async def data_transmission(websocket, path):
 			if  kill_state > 0 and kill_state < 3:
 				#Display kill message
 				#########fillertext#########
-				killswitch_r.put(kill_state += 1)
+				killswitch_r.put(kill_state + 1)
 
 		except:
 			pass
